@@ -61,7 +61,7 @@ namespace IEBroker.net46
             t = ConfigurationManager.AppSettings["ExecuteablePath"];
             if (t != null) Program.executablePath = t;
 
-            t = ConfigurationManager.AppSettings["ReportUrl"];
+            t = ConfigurationManager.AppSettings["BrokerStatusReportUrl"];
             if (t != null) Program.brokerStatusReportUrl = t;
         }
 
@@ -237,14 +237,19 @@ namespace IEBroker.net46
 
         private static void ReportBroekrStatus(URLCracker cracker)
         {
+            // Parameter validation
+            if (String.IsNullOrEmpty(cracker.ControlParam("SECURE"))) return;
+            if (String.IsNullOrEmpty(cracker.ControlParam("HOST"))) return;
+            if (String.IsNullOrEmpty(cracker.ControlParam("PORT"))) return;
             if (String.IsNullOrEmpty(Program.brokerStatusReportUrl)) return;
 
-            string responseText = string.Empty;
-            String targetUrl = String.Format("http://{0}:{1}{2}", cracker.Host, cracker.Port, Program.brokerStatusReportUrl);
+            string protocol = "Y".Equals(cracker.ControlParam("SECURE")) ? "https" : "http";
+            string targetUrl = String.Format("{0}://{1}:{2}{3}", protocol, cracker.ControlParam("HOST"), cracker.ControlParam("PORT"), Program.brokerStatusReportUrl);
+
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(targetUrl);
             request.Method = "GET";
             request.Timeout = 5 * 1000; // Timeout : 5 sec
-            request.Headers.Add("Cookie", String.Format("{0};", cracker.SessionPart));
+            request.Headers.Add("Cookie", String.Format("{0}={1};", cracker.ControlParam("SESSKEY"), cracker.ControlParam("SESSID")));
 
             try
             {
@@ -256,7 +261,7 @@ namespace IEBroker.net46
                         Stream respStream = resp.GetResponseStream();
                         using (StreamReader sr = new StreamReader(respStream))
                         {
-                            responseText = sr.ReadToEnd();
+                            string responseText = sr.ReadToEnd();
                             Console.WriteLine(responseText);
                         }
                     }

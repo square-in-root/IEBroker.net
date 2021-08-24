@@ -39,10 +39,10 @@ namespace IEBroker.net46
         private String path;
         private String query;
         private String fragment;
-        private String sessionPart;
+        private String controlPart;
 
         private Dictionary<String, String> queryMap = new Dictionary<String, String>();
-        private Dictionary<String, String> sessionMap = new Dictionary<String, String>();
+        private Dictionary<String, String> controlMap = new Dictionary<String, String>();
 
 
         public String ProtocolGeneral { get; set; }
@@ -65,11 +65,11 @@ namespace IEBroker.net46
                 if (idx == -1)
                 {
                     this.urlWIthoutProtocolWIthoutSessionPart = temp1;
-                    this.sessionPart = "";
+                    this.controlPart = "";
                 }
                 else
                 {
-                    StringSpliter(temp1, idx, ";".Length, ref this.urlWIthoutProtocolWIthoutSessionPart, ref this.sessionPart);
+                    StringSpliter(temp1, idx, ";".Length, ref this.urlWIthoutProtocolWIthoutSessionPart, ref this.controlPart);
                 }
             }
         }
@@ -112,11 +112,15 @@ namespace IEBroker.net46
             get { return this.fragment; }
         }
 
-        public String SessionPart
+        public String ControlPart
         {
-            get { return this.sessionPart; }
+            get { return this.controlPart; }
         }
 
+        public String ControlParam(string key)
+        {
+            return this.controlMap.ContainsKey(key) ? this.controlMap[key] : null;
+        }
 
         public void DoCrack()
         {
@@ -162,13 +166,13 @@ namespace IEBroker.net46
                 }
             }
 
-            // Extract Session to Param
-            if (!String.IsNullOrEmpty(this.sessionPart))
+            // Extract Control to Param
+            if (!String.IsNullOrEmpty(this.controlPart))
             {
-                foreach (String t in this.sessionPart.Split('&'))
+                foreach (String t in this.controlPart.Split('&'))
                 {
                     String[] kv = t.Split('=');
-                    this.sessionMap[kv[0]] = kv[1];
+                    this.controlMap[kv[0]] = kv[1];
                 }
             }
         }
